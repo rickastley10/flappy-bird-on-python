@@ -67,6 +67,10 @@ jumping=0
 jumpframe=10
 t.tracer(0, 0)
 flapanim=2
+vel=0
+grav=-1
+jumpstrength=10
+startup = 1
 
 f=turtle.Turtle()
 f.penup()
@@ -102,16 +106,19 @@ ground.shape("base.gif")
 
 
 def gameover():
-    global p1x, p1y, bx, by, jumping, jumpframe, score, flapanim, gameon, p3x, p3y
+    global p1x, p1y, bx, by, jumping, jumpframe, score, flapanim, gameon, p3x, p3y, vel, grav, jumpstrength, startup
     t.clear()
-    if ostype == "windows":
-        winsound.PlaySound('hit.wav', winsound.SND_FILENAME | winsound.SND_ASYNC)
-    elif ostype == "linux":
-        subprocess.Popen(['aplay', 'hit.wav'])
-    elif ostype == "mac":
-        subprocess.Popen(['afplay', 'hit.wav'])
+    if startup != 1:
+        if ostype == "windows":
+            winsound.PlaySound('hit.wav', winsound.SND_FILENAME | winsound.SND_ASYNC)
+        elif ostype == "linux":
+            subprocess.Popen(['aplay', 'hit.wav'])
+        elif ostype == "mac":
+            subprocess.Popen(['afplay', 'hit.wav'])
+        else:
+            pass
     else:
-        pass
+        startup = 0
     p1x=100
     p1y=-300
     p3x=300
@@ -122,6 +129,8 @@ def gameover():
     jumpframe=10
     score=0
     gameon=0
+    flapanim=1
+    vel=0
     ground.hideturtle()
     p2.hideturtle()
     p1.hideturtle()
@@ -129,6 +138,10 @@ def gameover():
     p4.hideturtle()
     f.hideturtle()
     t.bgpic("mainmenu.gif")
+    t.goto(-80, 130)
+    t.color("orange")
+    
+    t.write(f" SCORE {score}\n HIGHSCORE {highscore}", align="center", font=("Arial Rounded MT Bold", 10, "normal"))
     
 def start():
     global gameon
@@ -143,11 +156,13 @@ def start():
     gameon=1
 
 def flappy():
-    global p1x, p1y, bx, by, jumping, jumpframe, score, flapanim
+    global p1x, p1y, bx, by, jumping, jumpframe, score, flapanim, vel, grav, jumpstrength
     if jumping == 0:
-        by-=10
+        vel+=grav
+        by+=vel
     flapanim+=1
-    if flapanim==5:flapanim=0
+    if flapanim==5:
+        flapanim=0
     if by <=-250:
         gameover()
         
@@ -160,6 +175,12 @@ def flappy():
     elif flapanim==4:
         f.shape("yellowbird-midflap.gif")
     f.goto(bx, by)
+    
+    '''t.goto(bx+10,by)
+    t.pendown()
+    t.setheading(90)
+    t.forward(10)
+    t.penup()'''
 
 def pipe():
     global p1x, p1y, bx, by, jumping, jumpframe, score, p3x, p3y, highscore
@@ -167,11 +188,11 @@ def pipe():
     p1.goto(p1x, p1y)
     p2.goto(p1x, (p1y+500))
     p2.setheading(180)
-    if (p1x <= bx <= p1x+20 and (p1y+300)<by)or(p1x <= bx <= p1x+20 and (p1y+200)>=by):
+    if (p1x <= bx+10 <= p1x+20 and (p1y+340)<=by+10)or(p1x <= bx+10 <= p1x+20 and (p1y+160)>=by-10):
         gameover()
     if p1x <= -150:
         p1x=300
-        p1y=-300 + ((random.randint(1,10))*20)
+        p1y=-340 + ((random.randint(1,10))*20)
         score+= 1
         if score > highscore:
             highscore = score
@@ -187,11 +208,11 @@ def pipe():
     p3x-=5
     p3.goto(p3x, p3y)
     p4.goto(p3x, (p3y+500))
-    if (p3x <= bx <= p3x+20 and (p3y+300)<by)or(p3x <= bx <= p3x+20 and (p3y+200)>=by):
+    if (p3x <= bx <= p3x+20 and (p3y+340)<=by+10)or(p3x <= bx <= p3x+20 and (p3y+160)>=by-10):
         gameover()
     if p3x <= -150:
         p3x=300
-        p3y=-300 + ((random.randint(1,10))*20)
+        p3y=-340 + ((random.randint(1,10))*20)
         score+= 1
         if score > highscore:
             highscore = score
@@ -207,22 +228,23 @@ def pipe():
     
 
 def gui():
-    t.goto(-100, 180)
-    t.color("orange")
-    t.write(f"{score}\nHI:{highscore}", align="center", font=("Arial Rounded MT Bold", 16, "normal"))
+    t.goto(0, 180)
+    t.color("white")
+    t.write(f"{score}", align="center", font=("Arial Rounded MT Bold", 20, "normal"))
     ground.goto(0, -260)
 
 def jumpanim():
-    global bx, by, jumping, jumpframe, flapanim
+    global bx, by, jumping, jumpframe, flapanim, vel
     
-    if jumpframe <= 10 and jumping==1:
-        by+=10
+    if jumpframe <= 5 and jumping==1:
+        vel=jumpstrength
+        by+=vel
         jumpframe += 1
         jumping = 1
         
         t.ontimer(jumpanim, 30)
         
-    elif jumpframe > 10 and jumping==1:
+    elif jumpframe > 5 and jumping==1:
         jumping=0
         
         pass
