@@ -5,18 +5,37 @@ t = turtle
 t.setup(300, 500)
 t.title("flappybird")
 os.chdir("assets")
-ostype="linux"
-if ostype=="windows":
-    import winsound
-    # winsound.PlaySound('path\\to\\sound.wav', winsound.SND_FILENAME)
-elif ostype=="linux":
-    import subprocess
-    # subprocess.call(['aplay', 'path/to/sound.wav'])
-elif ostype=="mac":
-    import subprocess
-    # subprocess.call(['afplay', 'path/to/sound.wav'])
 
 
+if os.path.exists("options"):
+    ostype=open("options", "r").read()
+    if ostype=="windows":
+        import winsound
+        # winsound.PlaySound('path\\to\\sound.wav', winsound.SND_FILENAME)
+    elif ostype=="linux":
+        import subprocess
+        # subprocess.call(['aplay', 'path/to/sound.wav'])
+    elif ostype=="mac":
+        import subprocess
+        # subprocess.call(['afplay', 'path/to/sound.wav'])
+    else:
+        pass
+else:
+    ostype=t.textinput("","what is your os?\nwindows | linux | mac")
+    open("options", "w").write(f"{ostype}")
+    if ostype=="windows":
+        import winsound
+        # winsound.PlaySound('path\\to\\sound.wav', winsound.SND_FILENAME)
+    elif ostype=="linux":
+        import subprocess
+        # subprocess.call(['aplay', 'path/to/sound.wav'])
+    elif ostype=="mac":
+        import subprocess
+        # subprocess.call(['afplay', 'path/to/sound.wav'])
+    else:
+        pass
+
+    
 
     
     
@@ -31,6 +50,11 @@ t.penup()
 t.hideturtle()
 t.bgpic("background-day.gif")
 
+if os.path.exists("highscore"):
+    highscore=int(open("highscore","r").read())
+else:
+    highscore=0
+    open("highscore","w").write(f"{highscore}")
 score=0
 gameon=0
 p1x=100
@@ -42,7 +66,6 @@ by = 0
 jumping=0
 jumpframe=10
 t.tracer(0, 0)
-menuon=1
 flapanim=2
 
 f=turtle.Turtle()
@@ -80,6 +103,15 @@ ground.shape("base.gif")
 
 def gameover():
     global p1x, p1y, bx, by, jumping, jumpframe, score, flapanim, gameon, p3x, p3y
+    t.clear()
+    if ostype == "windows":
+        winsound.PlaySound('hit.wav', winsound.SND_FILENAME | winsound.SND_ASYNC)
+    elif ostype == "linux":
+        subprocess.Popen(['aplay', 'hit.wav'])
+    elif ostype == "mac":
+        subprocess.Popen(['afplay', 'hit.wav'])
+    else:
+        pass
     p1x=100
     p1y=-300
     p3x=300
@@ -109,7 +141,7 @@ def start():
     f.showturtle()
     t.bgpic("background-day.gif")
     gameon=1
-    mainloop()
+
 def flappy():
     global p1x, p1y, bx, by, jumping, jumpframe, score, flapanim
     if jumping == 0:
@@ -130,44 +162,54 @@ def flappy():
     f.goto(bx, by)
 
 def pipe():
-    global p1x, p1y, bx, by, jumping, jumpframe, score, p3x, p3y
+    global p1x, p1y, bx, by, jumping, jumpframe, score, p3x, p3y, highscore
     p1x-=5
     p1.goto(p1x, p1y)
     p2.goto(p1x, (p1y+500))
     p2.setheading(180)
-    if (p1x < bx < p1x+20 and (p1y+300)<by)or(p1x < bx < p1x+20 and (p1y+200)>by):
+    if (p1x <= bx <= p1x+20 and (p1y+300)<by)or(p1x <= bx <= p1x+20 and (p1y+200)>=by):
         gameover()
     if p1x <= -150:
         p1x=300
         p1y=-300 + ((random.randint(1,10))*20)
         score+= 1
+        if score > highscore:
+            highscore = score
+            open("highscore","w").write(f"{highscore}")
         if ostype == "windows":
             winsound.PlaySound('point.wav', winsound.SND_FILENAME | winsound.SND_ASYNC)
         elif ostype == "linux":
             subprocess.Popen(['aplay', 'point.wav'])
         elif ostype == "mac":
             subprocess.Popen(['afplay', 'point.wav'])
+        else:
+            pass
     p3x-=5
     p3.goto(p3x, p3y)
     p4.goto(p3x, (p3y+500))
-    if (p3x < bx < p3x+20 and (p3y+300)<by)or(p3x < bx < p3x+20 and (p3y+200)>by):
+    if (p3x <= bx <= p3x+20 and (p3y+300)<by)or(p3x <= bx <= p3x+20 and (p3y+200)>=by):
         gameover()
     if p3x <= -150:
         p3x=300
         p3y=-300 + ((random.randint(1,10))*20)
         score+= 1
+        if score > highscore:
+            highscore = score
+            open("highscore","w").write(f"{highscore}")
         if ostype == "windows":
             winsound.PlaySound('point.wav', winsound.SND_FILENAME | winsound.SND_ASYNC)
         elif ostype == "linux":
             subprocess.Popen(['aplay', 'point.wav'])
         elif ostype == "mac":
             subprocess.Popen(['afplay', 'point.wav'])
+        else:
+            pass
     
 
 def gui():
-    t.goto(-100, 200)
+    t.goto(-100, 180)
     t.color("orange")
-    t.write(f"score: {score}", align="center", font=("Arial Rounded MT Bold", 10, "normal"))
+    t.write(f"{score}\nHI:{highscore}", align="center", font=("Arial Rounded MT Bold", 16, "normal"))
     ground.goto(0, -260)
 
 def jumpanim():
@@ -194,15 +236,15 @@ def jump():
         subprocess.Popen(['aplay', 'wing.wav'])
     elif ostype == "mac":
         subprocess.Popen(['afplay', 'wing.wav'])
+    else:
+        pass
     jumping=1
     jumpframe=0
     jumpanim()
     
     
 def key():
-    global menuon, gameon
-    if menuon==1:
-        menuon=0
+    global gameon
     if gameon==0:
         start()
     else:
@@ -210,9 +252,7 @@ def key():
     
     
 def click(x, y):
-    global menuon, gameon
-    if menuon==1:
-        menuon=0
+    global gameon
     if gameon==0:
         start()
     else:
@@ -223,17 +263,8 @@ t.onscreenclick(click)
 t.onkeypress(key, "space")
 t.listen()
 
-def menuscreen():
-    global gameon
-    if menuon == 1:
-        t.bgpic("mainmenu.gif")
-        t.ontimer(menuscreen, 30)
-    elif menuon == 0:
-        t.bgpic("background-day.gif")
-        gameon=1
-        mainloop()
-        
-menuscreen()
+gameover()
+
 def mainloop():
     if gameon==1:
         t.clear()
@@ -244,6 +275,8 @@ def mainloop():
         
         t.update()
         t.ontimer(mainloop, 30)
+    else:
+        t.ontimer(mainloop, 30)
     
-
+mainloop()
 t.mainloop()
